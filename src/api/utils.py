@@ -1,4 +1,7 @@
+import os
 from flask import jsonify, url_for
+from datetime import datetime, timedelta
+import jwt
 
 class APIException(Exception):
     status_code = 400
@@ -23,8 +26,6 @@ def has_no_empty_params(rule):
 def generate_sitemap(app):
     links = ['/admin/']
     for rule in app.url_map.iter_rules():
-        # Filter out rules we can't navigate to in a browser
-        # and rules that require parameters
         if "GET" in rule.methods and has_no_empty_params(rule):
             url = url_for(rule.endpoint, **(rule.defaults or {}))
             if "/admin/" not in url:
@@ -39,3 +40,34 @@ def generate_sitemap(app):
         <p>Start working on your project by following the <a href="https://start.4geeksacademy.com/starters/full-stack" target="_blank">Quick Start</a></p>
         <p>Remember to specify a real endpoint path like: </p>
         <ul style="text-align: left;">"""+links_html+"</ul></div>"
+
+# JWT Configuration
+SECRET_KEY = os.environ.get('JWT_SECRET_KEY', 'your-secret-key-change-in-production')
+ALGORITHM = 'HS256'
+TOKEN_EXPIRATION_DAYS = 7
+
+def generate_token(user):
+    """Genera un token JWT para el usuario"""
+    expiration = datetime.utcnow() + timedelta(days=TOKEN_EXPIRATION_DAYS)
+    
+    payload = {
+        'user_id': user.id,
+        'email': user.email,
+        'exp': expiration,
+        'iat': datetime.utcnow()
+    }
+    
+    token = jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
+    return token
+
+def verify_token(token):
+    """Verifica y decodifica un token JWT"""
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        return payload
+    except jwt.ExpiredSignatureError:
+        return None
+    except jwt.InvalidTokenError:
+        return None
+    except Exception:
+        return None
