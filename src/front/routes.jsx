@@ -13,7 +13,7 @@ export const router = createBrowserRouter(
       element={<Layout />}
       errorElement={
         <div className="container mt-5 text-center">
-          <h1>404 - Not found!</h1>
+          <h1>404 - Not found</h1>
           <p>La página que buscas no existe.</p>
           <a href="/" className="btn btn-primary">Volver al Inicio</a>
         </div>
